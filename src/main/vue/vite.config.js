@@ -4,10 +4,10 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => {
   // 根据模式设置 base 路径
   let base = '/'
-  if (mode === 'github-pages') {
-    // GitHub Pages 的 base 路径需要设置为仓库名，例如 /repo-name/
-    // 这里使用环境变量，方便在构建时传入
-    base = process.env.GITHUB_PAGES_BASE || '/'
+  
+  // 如果是 GitHub Pages 部署或生产环境，使用仓库名作为 base 路径
+  if (mode === 'production' || process.env.GITHUB_PAGES_BASE) {
+    base = process.env.GITHUB_PAGES_BASE || '/firstGithubProject/'
   }
 
   return {
