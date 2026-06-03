@@ -1,13 +1,92 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const currentDate = ref(new Date().toISOString().split('T')[0])
-const newsList = ref<any[]>([])
 const loading = ref(false)
 const error = ref('')
 
-// 使用注入的 API 地址，默认回退到 /api/news
-const API_BASE = typeof __API_BASE__ !== 'undefined' ? `${__API_BASE__}/news` : '/api/news'
+// 静态示例数据
+const staticData: Record<string, any[]> = {
+  '2026-06-03': [
+    {
+      id: 1,
+      title: 'OpenAI发布GPT-5：AGI领域重大突破',
+      source: 'TechCrunch',
+      url: 'https://techcrunch.com/ai/gpt5-release',
+      heatScore: 98.5,
+      publishTime: '2026-06-03 10:30:00',
+      summary: 'OpenAI今日正式发布GPT-5，在AGI领域取得重大突破。新模型展现出前所未有的推理能力和多模态理解能力，引发业界广泛关注。',
+      newsDate: '2026-06-03'
+    },
+    {
+      id: 2,
+      title: '谷歌DeepMind推出Gemini Ultra 2.0',
+      source: 'The Verge',
+      url: 'https://verge.com/ai/gemini-ultra-2',
+      heatScore: 95.2,
+      publishTime: '2026-06-03 09:15:00',
+      summary: '谷歌DeepMind团队今日宣布推出Gemini Ultra 2.0，该版本在代码生成和数学推理方面性能大幅提升，直接对标GPT-5。',
+      newsDate: '2026-06-03'
+    },
+    {
+      id: 3,
+      title: 'Anthropic融资30亿美元估值达600亿',
+      source: 'Bloomberg',
+      url: 'https://bloomberg.com/ai/anthropic-funding',
+      heatScore: 92.8,
+      publishTime: '2026-06-03 08:00:00',
+      summary: 'AI安全公司Anthropic完成新一轮30亿美元融资，公司估值达到600亿美元，成为仅次于OpenAI的第二大AI独角兽。',
+      newsDate: '2026-06-03'
+    },
+    {
+      id: 4,
+      title: 'Meta开源Llama 3.5：性能超越GPT-4',
+      source: 'Wired',
+      url: 'https://wired.com/ai/llama-3-5',
+      heatScore: 89.5,
+      publishTime: '2026-06-03 07:30:00',
+      summary: 'Meta正式开源Llama 3.5系列模型，在多项基准测试中超越GPT-4，且完全免费商用，引发开源社区热烈讨论。',
+      newsDate: '2026-06-03'
+    },
+    {
+      id: 5,
+      title: '英伟达发布下一代AI芯片Blackwell Ultra',
+      source: 'Ars Technica',
+      url: 'https://arstechnica.com/ai/nvidia-blackwell-ultra',
+      heatScore: 86.3,
+      publishTime: '2026-06-03 06:45:00',
+      summary: '英伟达在GTC大会上发布Blackwell Ultra芯片，AI训练性能提升3倍，能效比大幅优化，将于下半年正式出货。',
+      newsDate: '2026-06-03'
+    }
+  ],
+  '2026-06-02': [
+    {
+      id: 6,
+      title: '微软Copilot全面集成GPT-5',
+      source: 'Microsoft Blog',
+      url: 'https://microsoft.com/ai/copilot-gpt5',
+      heatScore: 94.0,
+      publishTime: '2026-06-02 10:30:00',
+      summary: '微软宣布Copilot全面集成GPT-5技术，Windows、Office全家桶将获得AI能力大幅提升。',
+      newsDate: '2026-06-02'
+    },
+    {
+      id: 7,
+      title: '特斯拉Optimus机器人实现量产',
+      source: 'Reuters',
+      url: 'https://reuters.com/ai/tesla-optimus',
+      heatScore: 91.5,
+      publishTime: '2026-06-02 14:00:00',
+      summary: '特斯拉宣布Optimus人形机器人正式量产，首批1000台将部署在工厂中，预计2027年面向消费者发售。',
+      newsDate: '2026-06-02'
+    }
+  ]
+}
+
+// 计算新闻列表
+const newsList = computed(() => {
+  return staticData[currentDate.value] || []
+})
 
 const formattedDate = computed(() => {
   const date = new Date(currentDate.value)
@@ -21,26 +100,6 @@ const formattedDate = computed(() => {
   }
   return `${date.getMonth() + 1}月${date.getDate()}日`
 })
-
-const fetchNews = async () => {
-  loading.value = true
-  error.value = ''
-  try {
-    const response = await fetch(`${API_BASE}/all/${currentDate.value}`)
-    const result = await response.json()
-    if (result.code === 200) {
-      newsList.value = result.data
-    } else {
-      error.value = result.message
-      newsList.value = []
-    }
-  } catch (e) {
-    error.value = '网络错误，请检查后端服务是否启动'
-    newsList.value = []
-  } finally {
-    loading.value = false
-  }
-}
 
 const goToToday = () => {
   currentDate.value = new Date().toISOString().split('T')[0]
@@ -66,12 +125,16 @@ const isToday = computed(() => {
   return currentDate.value === new Date().toISOString().split('T')[0]
 })
 
-watch(currentDate, () => {
-  fetchNews()
-})
-
 onMounted(() => {
-  fetchNews()
+  // 初始化数据
+  const today = new Date().toISOString().split('T')[0]
+  if (!staticData[today]) {
+    // 如果今天没有数据，使用最近一天的数据
+    const dates = Object.keys(staticData).sort().reverse()
+    if (dates.length > 0) {
+      currentDate.value = dates[0]
+    }
+  }
 })
 </script>
 
@@ -82,7 +145,7 @@ onMounted(() => {
         <span class="title-icon">⚡</span>
         AI新闻热点
       </h1>
-      <p class="subtitle">每日人工智能资讯精选</p>
+      <p class="subtitle">每日人工智能资讯精选（静态演示版）</p>
     </header>
 
     <div class="date-nav">
@@ -144,7 +207,7 @@ onMounted(() => {
     </div>
 
     <footer class="footer">
-      <p>数据来源：各大科技媒体 | 热度指数基于多维度算法计算</p>
+      <p>数据来源：各大科技媒体（演示数据） | 热度指数基于多维度算法计算</p>
     </footer>
   </div>
 </template>
@@ -220,8 +283,8 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   cursor: pointer;
   font-size: 1.2rem;
