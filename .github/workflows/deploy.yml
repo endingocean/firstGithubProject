@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ static-site ]
   workflow_dispatch:
 
 permissions:
@@ -15,42 +15,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: src/main/vue/package-lock.json
-
-      - name: Install dependencies
-        working-directory: src/main/vue
-        run: npm ci
-
-      - name: Build with correct base path
-        working-directory: src/main/vue
-        run: |
-          # 构建时设置环境变量，让 vite 知道资源应该放在哪个路径下
-          echo "Building with base path: /${{ github.event.repository.name }}/"
-          GITHUB_PAGES_BASE=/${{ github.event.repository.name }}/ npm run build
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: src/main/resources/static
-
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # 直接上传根目录的 index.html
+          path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
