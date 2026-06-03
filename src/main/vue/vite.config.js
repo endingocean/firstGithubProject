@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
 
 export default defineConfig(() => {
   // 根据环境变量设置 base 路径
@@ -13,7 +12,8 @@ export default defineConfig(() => {
     root: '.',
     base: base,
     build: {
-      outDir: resolve('/workspace/src/main/resources/static'),
+      // 使用相对于 root (.) 的相对路径
+      outDir: '../../src/main/resources/static',
       emptyOutDir: true
     },
     server: {
