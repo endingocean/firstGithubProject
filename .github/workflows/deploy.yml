@@ -20,33 +20,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: src/main/vue/package-lock.json
-          
+
       - name: Install dependencies
         working-directory: src/main/vue
         run: npm ci
-        
-      - name: Build
+
+      - name: Build with correct base path
         working-directory: src/main/vue
-        env:
-          # 设置为您的仓库名，例如 /repo-name/
-          GITHUB_PAGES_BASE: ${{ format('/{0}/', github.event.repository.name) }}
-          # 设置为您的后端地址，例如 https://your-backend.railway.app
-          API_BASE: ${{ secrets.API_BASE || '' }}
         run: |
-          # 如果没有设置 API_BASE，使用相对路径
-          if [ -z "$API_BASE" ]; then
-            npm run build
-          else
-            npm run build -- --mode github-pages
-          fi
-          
+          # 构建时设置环境变量，让 vite 知道资源应该放在哪个路径下
+          echo "Building with base path: /${{ github.event.repository.name }}/"
+          GITHUB_PAGES_BASE=/${{ github.event.repository.name }}/ npm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
